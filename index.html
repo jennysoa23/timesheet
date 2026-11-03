@@ -2,254 +2,260 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>香港 468 工時計算表（月曆）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>香港 468 工時計算表</title>
 <style>
   :root {
-    --bg: #f4f6f9;
+    --bg: #f8fafc;
     --card: #fff;
-    --primary: #1a3a5c;
-    --accent: #2c6aa0;
-    --ok: #00b894;
-    --rest: #f1f2f6;
-    --holiday: #ffeaa7;
-    --leave-annual: #d6eaf8;
-    --leave-sick: #fadbd8;
-    --locked: #f8f9fa;
+    --primary: #1e3a8a;
+    --accent: #3b82f6;
+    --ok: #059669;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --rest: #f1f5f9;
+    --holiday: #fef3c7;
+    --leave-annual: #dbeafe;
+    --leave-sick: #fecaca;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang HK", "Microsoft JhengHei", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang HK", sans-serif;
     background: var(--bg);
-    color: #2d3436;
+    color: var(--text);
     margin: 0;
-    padding: 16px;
+    padding: 10px;
+    font-size: 14px;
   }
-  .container { max-width: 980px; margin: 0 auto; }
-  h1 { color: var(--primary); margin: 0 0 4px; font-size: 1.6rem; }
-  .subtitle { color: #636e72; margin: 0 0 20px; font-size: 0.95rem; }
+  .container { max-width: 500px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 2px; color: var(--primary); }
+  .subtitle { font-size: 0.75rem; color: var(--muted); margin: 0 0 12px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+  }
 
   .controls {
-    background: var(--card);
-    padding: 14px 18px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .field label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 3px; font-weight: 600; }
+  .field input, .field select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+  }
+  .btn-row { display: flex; gap: 8px; }
+  .btn {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-save { background: #6366f1; color: #fff; }
+  .btn.success { background: #059669 !important; }
+  .btn.flash { transform: scale(0.96); }
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+  .summary-line strong { color: var(--primary); }
+  .summary-line .money { color: var(--ok); font-weight: 700; }
+
+  .warning-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: none;
+  }
+  .warning-box.show { display: block; }
+
+  .legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
-    align-items: flex-end;
-    margin-bottom: 18px;
+    gap: 6px;
+    font-size: 10px;
+    margin-bottom: 8px;
   }
-  .controls label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; color: #555; }
-  .controls input, .controls select {
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 15px;
-    min-width: 110px;
-  }
-  .controls button, .confirm-btn {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 9px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-  }
-  .controls button:hover, .confirm-btn:hover { background: var(--primary); }
-  .confirm-btn { background: #00b894; font-weight: 600; }
-  .confirm-btn:disabled { background: #b2bec3; cursor: not-allowed; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #ddd; }
 
-  .summary {
-    background: var(--card);
-    padding: 14px 18px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-bottom: 18px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 10px;
-  }
-  .summary .label { font-size: 12px; color: #666; }
-  .summary .value { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
-  .summary .value.money { color: var(--ok); }
-
-  .calendar {
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
   .cal-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background: var(--primary);
     color: #fff;
     text-align: center;
+    font-size: 11px;
     font-weight: 600;
-    font-size: 0.9rem;
+    border-radius: 8px 8px 0 0;
   }
-  .cal-header div { padding: 10px 4px; }
+  .cal-header div { padding: 6px 1px; }
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    background: #eee;
+    background: var(--border);
   }
   .day {
     background: #fff;
-    min-height: 100px;
-    padding: 6px;
-    font-size: 12.5px;
-    position: relative;
+    min-height: 68px;
+    padding: 3px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
   }
   .day.empty { background: #fafafa; }
   .day.weekend { background: var(--rest); }
   .day.holiday { background: var(--holiday); }
   .day.leave-annual { background: var(--leave-annual) !important; }
   .day.leave-sick { background: var(--leave-sick) !important; }
-  .day.locked { opacity: 0.85; pointer-events: none; }
-  .day-num { font-weight: 700; font-size: 1.1rem; }
-  .day-type { font-size: 11px; color: #444; margin-top: 1px; line-height: 1.3; }
-  .day-leave {
-    margin-top: 5px;
+  .day-num { font-weight: 700; font-size: 12px; }
+  .day-type { font-size: 8px; color: #64748b; line-height: 1.1; }
+  .day select {
     width: 100%;
-    font-size: 11.5px;
-    padding: 3px 4px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    font-size: 9px;
+    padding: 1px;
+    border-radius: 3px;
+    border: 1px solid #cbd5e1;
+    margin-top: auto;
+    background: #fff;
   }
-  .day-hours { font-size: 12px; margin-top: 4px; font-weight: 600; }
+  .day-hours { font-size: 9px; font-weight: 600; color: var(--primary); text-align: center; }
 
-  .confirm-box {
-    background: var(--card);
-    padding: 14px 18px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .confirm-box p { margin: 0 0 10px; font-size: 14px; color: #555; }
-  .confirmed-msg { color: var(--ok); font-weight: 600; margin-top: 8px; }
-
-  .legend {
-    display: flex;
-    gap: 14px;
-    font-size: 12px;
-    margin: 8px 0 16px;
-    flex-wrap: wrap;
-  }
-  .legend span { display: flex; align-items: center; gap: 4px; }
-  .legend i { width: 16px; height: 16px; border-radius: 3px; display: inline-block; }
-  .i-rest { background: var(--rest); border: 1px solid #ddd; }
-  .i-hol { background: var(--holiday); border: 1px solid #ddd; }
-  .i-work { background: #fff; border: 1px solid #ddd; }
-  .i-annual { background: var(--leave-annual); border: 1px solid #ddd; }
-  .i-sick { background: var(--leave-sick); border: 1px solid #ddd; }
-
-  .history {
-    background: var(--card);
-    padding: 16px 18px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  }
-  .history h2 { margin: 0 0 10px; font-size: 1.2rem; color: var(--primary); }
-  .note { font-size: 12px; color: #888; margin-top: 8px; }
-  .export-btn {
-    background: #636e72;
+  .confirm-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--ok);
     color: #fff;
     border: none;
-    padding: 6px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 13px;
-    margin-top: 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 10px;
   }
-  .status-ok { color: #00b894; font-weight: 600; }
-  .status-over { color: #d63031; font-weight: 700; }
+  .confirm-btn:disabled { background: #9ca3af; }
 
-  @media (max-width: 640px) {
-    .day { min-height: 90px; font-size: 12px; }
-    .cal-header div { font-size: 0.8rem; }
+  .saved-cards { display: flex; flex-direction: column; gap: 8px; }
+  .saved-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
   }
+  .saved-card .title { font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+  .saved-card .info { color: var(--muted); font-size: 12px; }
+  .status-ok { color: var(--ok); font-weight: 600; }
+  .status-over { color: var(--danger); font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>香港 468 工時計算表</h1>
-  <p class="subtitle">月曆顯示｜每日 3.5 小時（09:00–12:30）｜六日＋紅日休息｜滾動 4 星期 ≤ 68</p>
+  <p class="subtitle">每日 3.5 小時｜六日＋紅日休息｜滾動 4 星期 ≤ 68</p>
 
-  <div class="controls">
-    <div>
-      <label>年份</label>
-      <select id="year"></select>
+  <div class="card">
+    <div class="controls">
+      <div class="field">
+        <label>年份</label>
+        <select id="year"></select>
+      </div>
+      <div class="field">
+        <label>月份</label>
+        <select id="month">
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>時薪</label>
+        <input type="number" id="rate" min="0" step="0.1" value="0">
+      </div>
     </div>
-    <div>
-      <label>月份</label>
-      <select id="month">
-        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-      </select>
-    </div>
-    <div>
-      <label>該月時薪 (HK$)</label>
-      <input type="number" id="rate" min="0" step="0.1" value="0">
-    </div>
-    <div>
-      <button onclick="generate()">載入／更新月曆</button>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generate()">載入</button>
+      <button class="btn btn-save" onclick="manualSave()">💾 儲存</button>
     </div>
   </div>
 
-  <div class="summary" id="summary" style="display:none;">
-    <div><div class="label">應上班天數</div><div class="value" id="workDays">0</div></div>
-    <div><div class="label">計薪天數</div><div class="value" id="paidDays">0</div></div>
-    <div><div class="label">當月月薪</div><div class="value money" id="salary">HK$0</div></div>
-    <div><div class="label">本月總工時</div><div class="value" id="totalHours">0</div></div>
+  <div class="summary-line" id="summaryLine" style="display:none;">
+    <span>上班 <strong id="workDays">0</strong></span>
+    <span>計薪 <strong id="paidDays">0</strong></span>
+    <span>月薪 <strong class="money" id="salary">0</strong></span>
+    <span>工時 <strong id="totalHours">0</strong></span>
   </div>
+
+  <div class="warning-box" id="warningBox">⚠️ 本月工時已接近或超過 468 上限（滾動 4 星期 ≤ 68）</div>
 
   <div class="legend">
-    <span><i class="i-work"></i> 上班</span>
-    <span><i class="i-rest"></i> 星期六／日</span>
-    <span><i class="i-hol"></i> 公眾假期</span>
-    <span><i class="i-annual"></i> 🌴 休假（無薪）</span>
-    <span><i class="i-sick"></i> 🤒 病假（無薪）</span>
+    <span><div class="swatch" style="background:#fff"></div>上班</span>
+    <span><div class="swatch" style="background:var(--rest)"></div>六日</span>
+    <span><div class="swatch" style="background:var(--holiday)"></div>紅日</span>
+    <span><div class="swatch" style="background:var(--leave-annual)"></div>🌴</span>
+    <span><div class="swatch" style="background:var(--leave-sick)"></div>🤒</span>
   </div>
 
-  <div class="calendar" id="calendar"></div>
+  <div class="card" style="padding:0; overflow:hidden;" id="calendar"></div>
 
-  <div class="confirm-box" id="confirmBox" style="display:none;">
-    <p>確認本月已收到款項後，按下方按鈕儲存並鎖定</p>
+  <div class="card" id="confirmBox" style="display:none;">
     <button class="confirm-btn" id="confirmBtn" onclick="confirmMonth()">本月確認收錢</button>
-    <div id="confirmedMsg" class="confirmed-msg"></div>
+    <div id="confirmedMsg" style="text-align:center; margin-top:6px; color:var(--ok); font-size:13px; font-weight:600;"></div>
   </div>
 
-  <div class="history">
-    <h2>已確認收錢紀錄（按月）</h2>
-    <div id="historyList"></div>
-    <button class="export-btn" onclick="exportHistory()">匯出紀錄 (JSON)</button>
-    <p class="note">確認後不可再修改。滾動 4 星期工時以每月平均估算（精確計算需跨月資料）。</p>
+  <div class="card">
+    <h2 style="margin:0 0 10px; font-size:1.05rem; color:var(--primary);">已儲存月份</h2>
+    <div class="saved-cards" id="savedCards"></div>
   </div>
 </div>
 
 <script>
 const HOURS = 3.5;
 const holidayNames = {
-  "2026-01-01":"一月一日","2026-02-17":"農曆年初一","2026-02-18":"農曆年初二","2026-02-19":"農曆年初三",
-  "2026-04-03":"耶穌受難節","2026-04-04":"耶穌受難節翌日","2026-04-06":"清明節翌日","2026-04-07":"復活節星期一翌日",
-  "2026-05-01":"勞動節","2026-05-25":"佛誕翌日","2026-06-19":"端午節","2026-07-01":"特區成立紀念日",
-  "2026-09-26":"中秋節翌日","2026-10-01":"國慶日","2026-10-19":"重陽節翌日","2026-12-25":"聖誕節","2026-12-26":"聖誕節後第一個周日",
-  "2027-01-01":"一月一日","2027-02-06":"農曆年初一","2027-02-08":"農曆年初三","2027-02-09":"農曆年初四",
-  "2027-03-26":"耶穌受難節","2027-03-27":"耶穌受難節翌日","2027-03-29":"復活節星期一","2027-04-05":"清明節",
-  "2027-05-01":"勞動節","2027-05-13":"佛誕","2027-06-09":"端午節","2027-07-01":"特區成立紀念日",
-  "2027-09-16":"中秋節翌日","2027-10-01":"國慶日","2027-10-08":"重陽節","2027-12-25":"聖誕節","2027-12-27":"聖誕節後第一個周日",
-  "2028-01-01":"一月一日","2028-01-26":"農曆年初一","2028-01-27":"農曆年初二","2028-01-28":"農曆年初三",
-  "2028-04-04":"清明節","2028-04-14":"耶穌受難節","2028-04-15":"耶穌受難節翌日","2028-04-17":"復活節星期一",
-  "2028-05-01":"勞動節","2028-05-02":"佛誕","2028-07-01":"特區成立紀念日","2028-10-02":"國慶日翌日",
-  "2028-10-04":"中秋節翌日","2028-10-26":"重陽節","2028-12-25":"聖誕節","2028-12-26":"聖誕節後第一個周日"
+  "2026-01-01":"元旦","2026-02-17":"年初一","2026-02-18":"年初二","2026-02-19":"年初三",
+  "2026-04-03":"受難","2026-04-04":"受難翌","2026-04-06":"清明翌","2026-04-07":"復活",
+  "2026-05-01":"勞動","2026-05-25":"佛誕翌","2026-06-19":"端午","2026-07-01":"特區",
+  "2026-09-26":"中秋翌","2026-10-01":"國慶","2026-10-19":"重陽翌","2026-12-25":"聖誕","2026-12-26":"聖誕後",
+  "2027-01-01":"元旦","2027-02-06":"年初一","2027-02-08":"年初三","2027-02-09":"年初四",
+  "2027-03-26":"受難","2027-03-27":"受難翌","2027-03-29":"復活","2027-04-05":"清明",
+  "2027-05-01":"勞動","2027-05-13":"佛誕","2027-06-09":"端午","2027-07-01":"特區",
+  "2027-09-16":"中秋翌","2027-10-01":"國慶","2027-10-08":"重陽","2027-12-25":"聖誕","2027-12-27":"聖誕後",
+  "2028-01-01":"元旦","2028-01-26":"年初一","2028-01-27":"年初二","2028-01-28":"年初三",
+  "2028-04-04":"清明","2028-04-14":"受難","2028-04-15":"受難翌","2028-04-17":"復活",
+  "2028-05-01":"勞動","2028-05-02":"佛誕","2028-07-01":"特區","2028-10-02":"國慶翌",
+  "2028-10-04":"中秋翌","2028-10-26":"重陽","2028-12-25":"聖誕","2028-12-26":"聖誕後"
 };
 const weekNames = ["日","一","二","三","四","五","六"];
 
@@ -285,7 +291,19 @@ for(let y=2025;y<=2029;y++){
 }
 document.getElementById("month").value = now.getMonth()+1;
 
+
+function flashButton(btn, text) {
+  const original = btn.textContent;
+  btn.classList.add("flash", "success");
+  btn.textContent = text;
+  setTimeout(() => {
+    btn.classList.remove("flash", "success");
+    btn.textContent = original;
+  }, 1200);
+}
+
 function generate(){
+  // feedback at end
   const key = getMonthKey();
   const saved = loadMonthData(key);
   document.getElementById("rate").value = saved.rate || 0;
@@ -310,7 +328,7 @@ function generate(){
     const ds = fmt(date);
     const weekend = isWeekend(date);
     const holName = getHolidayName(date);
-    const type = holName ? holName : (weekend ? "休息" : "上班");
+    const type = holName ? holName : (weekend ? "休" : "上");
     const isWork = !holName && !weekend;
     let cls = holName ? "holiday" : (weekend ? "weekend" : "");
     if(isLocked) cls += " locked";
@@ -321,22 +339,28 @@ function generate(){
       <div class="day-num">${d}</div>
       <div class="day-type">${type}</div>
       ${isWork ? `<select class="day-leave" onchange="onLeaveChange()" ${isLocked?"disabled":""}>
-        <option value="無" ${savedLeave==="無"?"selected":""}>無請假</option>
-        <option value="休假" ${savedLeave==="休假"?"selected":""}>🌴 休假（無薪）</option>
-        <option value="病假" ${savedLeave==="病假"?"selected":""}>🤒 病假（無薪）</option>
-      </select>
-      <div class="day-hours">3.5 小時</div>` : `<div class="day-hours">${holName?"假期":"休息"}</div>`}
+        <option value="無" ${savedLeave==="無"?"selected":""}>-</option>
+        <option value="休假" ${savedLeave==="休假"?"selected":""}>🌴</option>
+        <option value="病假" ${savedLeave==="病假"?"selected":""}>🤒</option>
+      </select>` : ""}
+      <div class="day-hours">${isWork ? (savedLeave==="無" ? "3.5" : "0") : ""}</div>
     </div>`;
   }
   html += `</div>`;
   document.getElementById("calendar").innerHTML = html;
-  document.getElementById("summary").style.display = "grid";
+  document.getElementById("summaryLine").style.display = "flex";
   document.getElementById("confirmBox").style.display = "block";
   checkAlreadyConfirmed();
   recalc();
+  renderSavedCards();
 }
 
 function onLeaveChange(){
+  manualSave();
+  recalc();
+}
+
+function manualSave(){
   const key = getMonthKey();
   const saved = loadMonthData(key);
   saved.rate = +document.getElementById("rate").value || 0;
@@ -347,7 +371,8 @@ function onLeaveChange(){
     if(sel) saved.leaves[ds] = sel.value;
   });
   saveMonthData(key, saved);
-  recalc();
+  renderSavedCards();
+  flashButton(document.getElementById("saveBtn"), "已儲存");
 }
 
 function recalc(){
@@ -365,20 +390,30 @@ function recalc(){
     else if(leave === "休假") el.classList.add("leave-annual");
     else if(leave === "病假") el.classList.add("leave-sick");
     const hoursEl = el.querySelector(".day-hours");
-    if(hoursEl) hoursEl.textContent = paid ? "3.5 小時" : "0（無薪）";
+    if(hoursEl) hoursEl.textContent = paid ? "3.5" : "0";
   });
   const rate = +document.getElementById("rate").value || 0;
   const salary = paidDays * HOURS * rate;
   document.getElementById("workDays").textContent = workDays;
   document.getElementById("paidDays").textContent = paidDays;
-  document.getElementById("salary").textContent = "HK$" + salary.toFixed(2);
+  document.getElementById("salary").textContent = "HK$" + salary.toFixed(0);
   document.getElementById("totalHours").textContent = totalHours.toFixed(1);
 
-  // auto-save rate
-  const key = getMonthKey();
-  const saved = loadMonthData(key);
-  saved.rate = rate;
-  saveMonthData(key, saved);
+  // 468 check - show if any week under 17h or total low
+  const warning = document.getElementById("warningBox");
+  const weeklyAvg = totalHours / 4.3;
+  const rolling4 = weeklyAvg * 4;
+  if (rolling4 >= 68 || totalHours >= 60) {
+    warning.style.display = "block";
+    warning.className = "warning danger";
+    warning.textContent = `⚠️ 468 警告：滾動 4 星期估算已達 ${rolling4.toFixed(1)} 小時，請減少工時以免成為連續性合約！`;
+  } else if (rolling4 >= 58) {
+    warning.style.display = "block";
+    warning.className = "warning";
+    warning.textContent = `⚠️ 接近 68 小時上限（估算 ${rolling4.toFixed(1)} 小時），請小心安排以免觸及連續性合約。`;
+  } else {
+    warning.style.display = "none";
+  }
 }
 
 function checkAlreadyConfirmed(){
@@ -390,8 +425,8 @@ function checkAlreadyConfirmed(){
   const rateInput = document.getElementById("rate");
   if(found){
     btn.disabled = true;
-    btn.textContent = "本月已確認（已鎖定）";
-    msg.textContent = `已於 ${found.date} 確認收錢（時薪 HK$${found.rate}，月薪 HK$${found.salary}）`;
+    btn.textContent = "已確認鎖定";
+    msg.textContent = `已於 ${found.date} 確認（月薪 HK$${found.salary}）`;
     rateInput.disabled = true;
   } else {
     btn.disabled = false;
@@ -411,60 +446,49 @@ function confirmMonth(){
   const paid = +document.getElementById("paidDays").textContent || 0;
   const salary = (paid * HOURS * rate).toFixed(2);
   const totalHours = (paid * HOURS).toFixed(1);
-
-  // rough 468 estimate: assume ~4.3 weeks/month
   const weeklyAvg = (paid * HOURS / 4.3).toFixed(1);
-  const status = weeklyAvg > 68 ? "超過468" : "正常";
+  const status = weeklyAvg > 15.8 ? "留意468" : "正常";
 
   hist.push({
     key: pkey, year: mkey.slice(0,4), month: mkey.slice(5),
-    paidDays: paid, rate, salary, totalHours,
-    weeklyAvg, status,
+    paidDays: paid, rate, salary, totalHours, weeklyAvg, status,
     date: new Date().toISOString().slice(0,10)
   });
   localStorage.setItem("hk468_payment_records", JSON.stringify(hist));
-  generate(); // refresh to lock
-  renderHistory();
+  generate();
 }
 
-function renderHistory(){
-  const data = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
-  if(!data.length){
-    document.getElementById("historyList").innerHTML = "<p>暫無紀錄</p>";
+function renderSavedCards(){
+  const data = JSON.parse(localStorage.getItem("hk468_month_data") || "{}");
+  const payments = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
+  const keys = Object.keys(data).sort().reverse();
+  if(!keys.length){
+    document.getElementById("savedCards").innerHTML = "<p style='color:#94a3b8; font-size:13px;'>暫無紀錄</p>";
     return;
   }
-  let html = `<table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr style="background:#1a3a5c;color:#fff;">
-    <th style="padding:8px;">年份</th><th>月份</th><th>時薪</th><th>計薪天數</th><th>月薪</th><th>週平均工時</th><th>468狀態</th><th>確認日期</th></tr></thead><tbody>`;
-  data.slice().reverse().forEach(e=>{
-    const stClass = e.status === "超過468" ? "status-over" : "status-ok";
-    html += `<tr style="border-bottom:1px solid #eee;text-align:center;">
-      <td style="padding:8px;">${e.year}</td><td>${parseInt(e.month)}</td><td>HK$${e.rate}</td>
-      <td>${e.paidDays}</td><td>HK$${e.salary}</td><td>${e.weeklyAvg}</td>
-      <td class="${stClass}">${e.status}</td><td>${e.date}</td></tr>`;
+  let html = "";
+  keys.forEach(key => {
+    const d = data[key];
+    const pay = payments.find(p => p.key === "confirmed_" + key);
+    const [y, m] = key.split("-");
+    const leaves = d.leaves || {};
+    const leaveCount = Object.values(leaves).filter(v => v !== "無").length;
+    const paidDays = Object.values(leaves).filter(v => v === "無").length;
+    const hours = (paidDays * 3.5).toFixed(1);
+    const salary = (paidDays * 3.5 * (d.rate || 0)).toFixed(0);
+    html += `<div class="saved-card">
+      <div class="title">${y}年 ${parseInt(m)}月</div>
+      <div class="info">時薪 HK$${d.rate || 0}｜請假 ${leaveCount} 天</div>
+      <div class="info">工時 ${hours} 小時｜月薪 HK$${salary}</div>
+      ${pay ? `<div class="status-ok">已確認｜實際月薪 HK$${pay.salary}</div>` : `<div style="color:#94a3b8; font-size:12px;">未確認</div>`}
+    </div>`;
   });
-  html += `</tbody></table>`;
-  document.getElementById("historyList").innerHTML = html;
+  document.getElementById("savedCards").innerHTML = html;
 }
 
-function exportHistory(){
-  const data = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "hk468_收錢紀錄.json";
-  a.click();
-}
-
-document.getElementById("rate").addEventListener("input", () => {
-  const key = getMonthKey();
-  const saved = loadMonthData(key);
-  saved.rate = +document.getElementById("rate").value || 0;
-  saveMonthData(key, saved);
-  recalc();
-});
-
-renderHistory();
-setTimeout(generate, 100);
+document.getElementById("rate").addEventListener("input", manualSave);
+renderSavedCards();
+document.addEventListener("DOMContentLoaded", generate);
 </script>
 </body>
 </html>
