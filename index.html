@@ -15,6 +15,7 @@
     --holiday: #ffeaa7;
     --leave-annual: #d6eaf8;
     --leave-sick: #fadbd8;
+    --locked: #f8f9fa;
   }
   * { box-sizing: border-box; }
   body {
@@ -109,6 +110,7 @@
   .day.holiday { background: var(--holiday); }
   .day.leave-annual { background: var(--leave-annual) !important; }
   .day.leave-sick { background: var(--leave-sick) !important; }
+  .day.locked { opacity: 0.85; pointer-events: none; }
   .day-num { font-weight: 700; font-size: 1.1rem; }
   .day-type { font-size: 11px; color: #444; margin-top: 1px; line-height: 1.3; }
   .day-leave {
@@ -120,7 +122,6 @@
     border: 1px solid #ccc;
   }
   .day-hours { font-size: 12px; margin-top: 4px; font-weight: 600; }
-  .symbol { font-size: 16px; margin-right: 2px; }
 
   .confirm-box {
     background: var(--card);
@@ -166,6 +167,8 @@
     font-size: 13px;
     margin-top: 8px;
   }
+  .status-ok { color: #00b894; font-weight: 600; }
+  .status-over { color: #d63031; font-weight: 700; }
 
   @media (max-width: 640px) {
     .day { min-height: 90px; font-size: 12px; }
@@ -194,10 +197,10 @@
     </div>
     <div>
       <label>該月時薪 (HK$)</label>
-      <input type="number" id="rate" min="0" step="0.1" value="0" oninput="recalc()">
+      <input type="number" id="rate" min="0" step="0.1" value="0">
     </div>
     <div>
-      <button onclick="generate()">生成月曆</button>
+      <button onclick="generate()">載入／更新月曆</button>
     </div>
   </div>
 
@@ -212,14 +215,14 @@
     <span><i class="i-work"></i> 上班</span>
     <span><i class="i-rest"></i> 星期六／日</span>
     <span><i class="i-hol"></i> 公眾假期</span>
-    <span><i class="i-annual"></i> <span class="symbol">🌴</span> 休假（無薪）</span>
-    <span><i class="i-sick"></i> <span class="symbol">🤒</span> 病假（無薪）</span>
+    <span><i class="i-annual"></i> 🌴 休假（無薪）</span>
+    <span><i class="i-sick"></i> 🤒 病假（無薪）</span>
   </div>
 
   <div class="calendar" id="calendar"></div>
 
   <div class="confirm-box" id="confirmBox" style="display:none;">
-    <p>確認本月已收到款項後，按下方按鈕儲存紀錄</p>
+    <p>確認本月已收到款項後，按下方按鈕儲存並鎖定</p>
     <button class="confirm-btn" id="confirmBtn" onclick="confirmMonth()">本月確認收錢</button>
     <div id="confirmedMsg" class="confirmed-msg"></div>
   </div>
@@ -228,7 +231,7 @@
     <h2>已確認收錢紀錄（按月）</h2>
     <div id="historyList"></div>
     <button class="export-btn" onclick="exportHistory()">匯出紀錄 (JSON)</button>
-    <p class="note">紀錄獨立儲存在本機瀏覽器（localStorage）。可匯出備份。</p>
+    <p class="note">確認後不可再修改。滾動 4 星期工時以每月平均估算（精確計算需跨月資料）。</p>
   </div>
 </div>
 
@@ -255,6 +258,23 @@ function fmt(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDat
 function isWeekend(d){ const w=d.getDay(); return w===0||w===6; }
 function getHolidayName(d){ return holidayNames[fmt(d)] || null; }
 
+function getMonthKey(){
+  const y = document.getElementById("year").value;
+  const m = document.getElementById("month").value.padStart(2,"0");
+  return `${y}-${m}`;
+}
+
+function loadMonthData(key){
+  const all = JSON.parse(localStorage.getItem("hk468_month_data") || "{}");
+  return all[key] || { rate: 0, leaves: {} };
+}
+
+function saveMonthData(key, data){
+  const all = JSON.parse(localStorage.getItem("hk468_month_data") || "{}");
+  all[key] = data;
+  localStorage.setItem("hk468_month_data", JSON.stringify(all));
+}
+
 const yearSel = document.getElementById("year");
 const now = new Date();
 for(let y=2025;y<=2029;y++){
@@ -265,18 +285,19 @@ for(let y=2025;y<=2029;y++){
 }
 document.getElementById("month").value = now.getMonth()+1;
 
-function getKey(){
-  const y = document.getElementById("year").value;
-  const m = document.getElementById("month").value.padStart(2,"0");
-  return `confirmed_${y}_${m}`;
-}
-
 function generate(){
+  const key = getMonthKey();
+  const saved = loadMonthData(key);
+  document.getElementById("rate").value = saved.rate || 0;
+
   const year = +document.getElementById("year").value;
   const month = +document.getElementById("month").value;
   const first = new Date(year, month-1, 1);
   const days = new Date(year, month, 0).getDate();
   const startDow = first.getDay();
+
+  const payments = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
+  const isLocked = payments.some(p => p.key === `confirmed_${key}`);
 
   let html = `<div class="cal-header">`;
   weekNames.forEach(w => html += `<div>${w}</div>`);
@@ -292,14 +313,17 @@ function generate(){
     const type = holName ? holName : (weekend ? "休息" : "上班");
     const isWork = !holName && !weekend;
     let cls = holName ? "holiday" : (weekend ? "weekend" : "");
+    if(isLocked) cls += " locked";
+
+    const savedLeave = saved.leaves[ds] || "無";
 
     html += `<div class="day ${cls}" data-date="${ds}" data-work="${isWork}">
       <div class="day-num">${d}</div>
       <div class="day-type">${type}</div>
-      ${isWork ? `<select class="day-leave" onchange="recalc()">
-        <option value="無">無請假</option>
-        <option value="休假">🌴 休假（無薪）</option>
-        <option value="病假">🤒 病假（無薪）</option>
+      ${isWork ? `<select class="day-leave" onchange="onLeaveChange()" ${isLocked?"disabled":""}>
+        <option value="無" ${savedLeave==="無"?"selected":""}>無請假</option>
+        <option value="休假" ${savedLeave==="休假"?"selected":""}>🌴 休假（無薪）</option>
+        <option value="病假" ${savedLeave==="病假"?"selected":""}>🤒 病假（無薪）</option>
       </select>
       <div class="day-hours">3.5 小時</div>` : `<div class="day-hours">${holName?"假期":"休息"}</div>`}
     </div>`;
@@ -309,6 +333,20 @@ function generate(){
   document.getElementById("summary").style.display = "grid";
   document.getElementById("confirmBox").style.display = "block";
   checkAlreadyConfirmed();
+  recalc();
+}
+
+function onLeaveChange(){
+  const key = getMonthKey();
+  const saved = loadMonthData(key);
+  saved.rate = +document.getElementById("rate").value || 0;
+  saved.leaves = {};
+  document.querySelectorAll(".day[data-date]").forEach(el => {
+    const ds = el.dataset.date;
+    const sel = el.querySelector(".day-leave");
+    if(sel) saved.leaves[ds] = sel.value;
+  });
+  saveMonthData(key, saved);
   recalc();
 }
 
@@ -335,45 +373,57 @@ function recalc(){
   document.getElementById("paidDays").textContent = paidDays;
   document.getElementById("salary").textContent = "HK$" + salary.toFixed(2);
   document.getElementById("totalHours").textContent = totalHours.toFixed(1);
+
+  // auto-save rate
+  const key = getMonthKey();
+  const saved = loadMonthData(key);
+  saved.rate = rate;
+  saveMonthData(key, saved);
 }
 
 function checkAlreadyConfirmed(){
-  const key = getKey();
+  const key = "confirmed_" + getMonthKey();
   const hist = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
   const found = hist.find(e => e.key === key);
   const btn = document.getElementById("confirmBtn");
   const msg = document.getElementById("confirmedMsg");
+  const rateInput = document.getElementById("rate");
   if(found){
     btn.disabled = true;
-    btn.textContent = "本月已確認";
-    msg.textContent = `已於 ${found.date} 確認收錢（月薪 HK$${found.salary}）`;
+    btn.textContent = "本月已確認（已鎖定）";
+    msg.textContent = `已於 ${found.date} 確認收錢（時薪 HK$${found.rate}，月薪 HK$${found.salary}）`;
+    rateInput.disabled = true;
   } else {
     btn.disabled = false;
     btn.textContent = "本月確認收錢";
     msg.textContent = "";
+    rateInput.disabled = false;
   }
 }
 
 function confirmMonth(){
-  const key = getKey();
+  const mkey = getMonthKey();
+  const pkey = "confirmed_" + mkey;
   let hist = JSON.parse(localStorage.getItem("hk468_payment_records") || "[]");
-  if(hist.find(e => e.key === key)) return;
+  if(hist.find(e => e.key === pkey)) return;
 
-  const year = document.getElementById("year").value;
-  const month = document.getElementById("month").value.padStart(2,"0");
   const rate = +document.getElementById("rate").value || 0;
   const paid = +document.getElementById("paidDays").textContent || 0;
   const salary = (paid * HOURS * rate).toFixed(2);
+  const totalHours = (paid * HOURS).toFixed(1);
+
+  // rough 468 estimate: assume ~4.3 weeks/month
+  const weeklyAvg = (paid * HOURS / 4.3).toFixed(1);
+  const status = weeklyAvg > 68 ? "超過468" : "正常";
 
   hist.push({
-    key, year, month,
-    paidDays: paid,
-    rate,
-    salary,
+    key: pkey, year: mkey.slice(0,4), month: mkey.slice(5),
+    paidDays: paid, rate, salary, totalHours,
+    weeklyAvg, status,
     date: new Date().toISOString().slice(0,10)
   });
   localStorage.setItem("hk468_payment_records", JSON.stringify(hist));
-  checkAlreadyConfirmed();
+  generate(); // refresh to lock
   renderHistory();
 }
 
@@ -384,11 +434,13 @@ function renderHistory(){
     return;
   }
   let html = `<table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr style="background:#1a3a5c;color:#fff;">
-    <th style="padding:8px;">年份</th><th>月份</th><th>計薪天數</th><th>時薪</th><th>月薪</th><th>確認日期</th></tr></thead><tbody>`;
+    <th style="padding:8px;">年份</th><th>月份</th><th>時薪</th><th>計薪天數</th><th>月薪</th><th>週平均工時</th><th>468狀態</th><th>確認日期</th></tr></thead><tbody>`;
   data.slice().reverse().forEach(e=>{
+    const stClass = e.status === "超過468" ? "status-over" : "status-ok";
     html += `<tr style="border-bottom:1px solid #eee;text-align:center;">
-      <td style="padding:8px;">${e.year}</td><td>${parseInt(e.month)}</td><td>${e.paidDays}</td>
-      <td>${e.rate}</td><td>HK$${e.salary}</td><td>${e.date}</td></tr>`;
+      <td style="padding:8px;">${e.year}</td><td>${parseInt(e.month)}</td><td>HK$${e.rate}</td>
+      <td>${e.paidDays}</td><td>HK$${e.salary}</td><td>${e.weeklyAvg}</td>
+      <td class="${stClass}">${e.status}</td><td>${e.date}</td></tr>`;
   });
   html += `</tbody></table>`;
   document.getElementById("historyList").innerHTML = html;
@@ -403,8 +455,16 @@ function exportHistory(){
   a.click();
 }
 
+document.getElementById("rate").addEventListener("input", () => {
+  const key = getMonthKey();
+  const saved = loadMonthData(key);
+  saved.rate = +document.getElementById("rate").value || 0;
+  saveMonthData(key, saved);
+  recalc();
+});
+
 renderHistory();
-setTimeout(generate, 80);
+setTimeout(generate, 100);
 </script>
 </body>
 </html>
